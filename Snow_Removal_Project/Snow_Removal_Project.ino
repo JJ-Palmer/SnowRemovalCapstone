@@ -14,19 +14,23 @@ void setup(){
   pinMode(RELAY_TRIGGER, OUTPUT);
   pinMode(US_TRIG, OUTPUT);
   pinMode(US_ECHO, INPUT);
-  float temp;
 
   }
 void loop() {
   /*Main Section of program. Triggers voltage out to relay if conditions met from sensors.
   * 
   */
-  temp = Temperature();
-  int  dutyCycle =  (-10 * temp) + 255; //FIXME need an equation, variable needs to be 256 (max power) and min working temp and drop to 0 (no power) as temp increases;
+  float temp = Temperature();
   
-  while (Snow_Depth() == true && Ambient_Light()==true && temp >= 0){
+  
+  if (Snow_Depth() == true && Ambient_Light()==true && temp >= 0){
+    int  dutyCycle =  ((-85/8) * temp) + (255/4); //FIXME: PWM currently linear from 0 to 40 F
     analogWrite(RELAY_TRIGGER, dutyCycle);
     }
+  else {
+    digitalWrite(RELAY_TRIGGER, LOW);  
+  }
+   delay(500);
   }
 
    
@@ -45,7 +49,7 @@ void loop() {
     */
    bool flag = false;
    int brightness = analogRead(LIGHT_SENSOR);
-   if brightness > 80 { //FIXME estimated this val based on sensor val from cloudy evening in my office.
+   if (brightness < 80) { //FIXME estimated this val based on sensor val from cloudy evening in my office.
      flag = true;
    }
     return flag; 
