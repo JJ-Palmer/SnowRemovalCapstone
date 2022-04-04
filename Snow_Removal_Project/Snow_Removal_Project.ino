@@ -1,52 +1,76 @@
 /*2021-22 Snow Removal Capstone Project controller software.
  * Team Members: Taylor Davis, Phillip Easterbrooks, Daniel Garber, Jared Palmer
  */
+
 #include <OneWire.h>
 
 int DS18S20_Pin = 2; //DS18S20 Signal pin on digital 2
-//Temperature chip i/o
 OneWire ds(DS18S20_Pin);  // on digital pin 2
 #define US_TRIG 12 //define D12 as ultrasonic trigger pin 
 #define US_ECHO 13 // define D13 as ultrosonic echo pin
-<<<<<<< HEAD
-#define LIGHT_SENSOR 7  //defing light sensor 
-=======
 #define LIGHT_SENSOR 4
->>>>>>> ab9aa8f3e02f935cf9706a6711119803e9a27173
 #define RELAY_TRIGGER 6 //
+int value = 0;
+const unsigned int TRIG=12;
+const unsigned int ECHO=13;
+const unsigned int vcc =11;
+
+
+
+
 void setup(){
   pinMode(RELAY_TRIGGER, OUTPUT);
   pinMode(US_TRIG, OUTPUT);
   pinMode(US_ECHO, INPUT);
 
+
   }
+/********************************
+*********************************
+********************************/   
 void loop() {
   /*Main Section of program. Triggers voltage out to relay if conditions met from sensors.
   * 
   */
-  float temp = Temperature();
-  
-  
-  if (Snow_Depth() == true && Ambient_Light()==true && temp >= 0){
-    int  dutyCycle =  ((-85/8) * temp) + (255/4); //FIXME: PWM currently linear from 0 to 40 F
+  double depth = Snow_Depth();
+  double temp = Temperature();
+  double V = temp_to_volt(depth,temp);
+  if (depth > 4.0 && Ambient_Light()==true && temp>-18 ){
+    int  dutyCycle =  255*(V/12); // 
+    if (dutyCycle > 12) {
+      dutyCycle = 12;
+      }
     analogWrite(RELAY_TRIGGER, dutyCycle);
     }
   else {
     digitalWrite(RELAY_TRIGGER, LOW);  
+    }
+   delay(60000); //reasseses all values every minute
   }
-   delay(500);
-  }
-
-   
-  int Snow_Depth(){
+/********************************
+*********************************
+********************************/    
+double Snow_Depth(){
     /* Snow Accumulation sensor, returns integer value of snow depth 
      *  
      */
-    double depth = 10.6;
-    return true; //FIXME returns true for testing purpose, needs body for this function
-  }
+  digitalWrite(vcc, HIGH);
+  digitalWrite(TRIG, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG, LOW);
 
-  
+  //convert time inbetween pulses into centimeters
+
+  const unsigned long  duration= pulseIn(ECHO, HIGH);
+  double distance= duration/58;
+  double depth = 35 - distance;
+
+  }
+/********************************
+*********************************
+********************************/  
   bool Ambient_Light(){
     /* Ambient light sensor, returns boolean (true/false) value whether light enough for snow removal or not
     *  
@@ -55,11 +79,12 @@ void loop() {
    int brightness = analogRead(LIGHT_SENSOR);
    if (brightness < 80) { //FIXME estimated this val based on sensor val from cloudy evening in my office.
      flag = true;
-   }
+     }
     return flag; 
   }
-
-  
+/********************************
+*********************************
+********************************/   
   float Temperature(){
   //returns the temperature from one DS18S20 in DEG Celsius
 
@@ -105,9 +130,25 @@ void loop() {
   
   return TemperatureSum;
   }
-
-double temp_to_volt(){
+/********************************
+*********************************
+********************************/  
+double temp_to_volt(double depth,double temp){
       /*Pulsed output for relay pin. Accepts integer integer input in microseconds
     * as delay between pulses
     */ 
+  double Th = 27;
+  double A = 0.418;
+  double ksn = 0.3;
+  //double tsn = 0.04; 
+  double Ri = 8.8859;
+  double Rair = 0.694;
+  double Rpanel = 0.575;
+  double Rsn = depth/(ksn*A);
+  double V = 0;
+  double Q = (Th - temp)*(1/(Rpanel+Rsn+Rair)+1/(Ri+Rair)); //
+  if (Q >= 0) {
+    double V = sqrt(Q*0.9); //Voltage required as a fn of Q
+  }
+  return V;
 }
