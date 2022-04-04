@@ -8,7 +8,7 @@ int DS18S20_Pin = 2; //DS18S20 Signal pin on digital 2
 OneWire ds(DS18S20_Pin);  // on digital pin 2
 #define US_TRIG 12 //define D12 as ultrasonic trigger pin 
 #define US_ECHO 13 // define D13 as ultrosonic echo pin
-#define LIGHT_SENSOR 7
+#define LIGHT_SENSOR 7  //defing light sensor 
 #define RELAY_TRIGGER 6 //
 void setup(){
   pinMode(RELAY_TRIGGER, OUTPUT);
