@@ -36,11 +36,8 @@ void loop() {
   double temp = Temperature();
   double V = temp_to_volt(depth,temp);
   if (depth > 4.0 && Ambient_Light()==true && temp>-18 ){
-    int  dutyCycle =  255*(V/12); // 
-    if (dutyCycle > 12) {
-      dutyCycle = 12;
-      }
-    analogWrite(RELAY_TRIGGER, dutyCycle);
+    
+    analogWrite(RELAY_TRIGGER, 255); // Relic from PWM, set to full power.
     }
   else {
     digitalWrite(RELAY_TRIGGER, LOW);  
@@ -130,25 +127,4 @@ double Snow_Depth(){
   
   return TemperatureSum;
   }
-/********************************
-*********************************
-********************************/  
-double temp_to_volt(double depth,double temp){
-      /*Pulsed output for relay pin. Accepts integer integer input in microseconds
-    * as delay between pulses
-    */ 
-  double Th = 27;
-  double A = 0.418;
-  double ksn = 0.3;
-  //double tsn = 0.04; 
-  double Ri = 8.8859;
-  double Rair = 0.694;
-  double Rpanel = 0.575;
-  double Rsn = depth/(ksn*A);
-  double V = 0;
-  double Q = (Th - temp)*(1/(Rpanel+Rsn+Rair)+1/(Ri+Rair)); //
-  if (Q >= 0) {
-    double V = sqrt(Q*0.9); //Voltage required as a fn of Q
-  }
-  return V;
-}
+
